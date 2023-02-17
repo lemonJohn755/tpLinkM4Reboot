@@ -1,3 +1,5 @@
+# Github repo: https://github.com/uptoratlen/tpLinkM4Reboot
+
 from datetime import datetime
 import json
 import logging
@@ -13,7 +15,6 @@ from selenium.webdriver.firefox.options import Options as Options_FF
 from selenium.webdriver.chrome.options import Options as Options_Chrome
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
-
 
 def publish_to_mqtt(topic, text):
     if user_data[0]['mqtt_use'].lower() == "yes":
@@ -62,9 +63,13 @@ if user_data[0]['browser'].lower() == "firefox":
     driver = webdriver.Firefox(options=options, firefox_profile=profile, executable_path='geckodriver')
 elif user_data[0]['browser'].lower() == "chrome":
     # Chrome
+    
     chrome_options = Options_Chrome()
     if not browser_display == "yes":
+        chrome_options.add_argument('window-size=1400,600')
         chrome_options.add_argument("--headless")
+        chrome_options.add_argument('--disable-gpu')
+
     driver = webdriver.Chrome(options=chrome_options, executable_path='chromedriver')
 else:
     logging.exception("Browser selected that is not supported [firefox|chrome]")
@@ -107,7 +112,12 @@ try:
 
     # prepare reboot
     logging.info("Ready to Reboot")
-
+    
+    #scroll down in a panel
+    panel = driver.find_element(By.CLASS_NAME, "panel-content")
+    driver.execute_script("arguments[0].scrollIntoView();", panel)
+    
+    # Click REBOOK ALL button
     driver.find_element(By.LINK_TEXT,f"{user_data[0]['text_reboot_all']}").click()
 
     # wait for the reboot overlay
@@ -130,5 +140,5 @@ except Exception:
     publish_to_mqtt(mqtt_topic, 'Something failed - check log')
 finally:
     driver.quit()
-    client.disconnect()
+    # client.disconnect()
     exit()
